@@ -6,9 +6,9 @@ Servo servo2;
 // two servos powered by PWM
 // but also they don't get power until their MOSFET is activated
 
-const int SERVO_1_PWM_PIN = 3;
-const int SERVO_2_PWM_PIN = 5;
-const int SERVO_POWER_PIN = 7;
+const int SERVO_1_PWM_PIN = 9;
+const int SERVO_2_PWM_PIN = 10;
+const int SERVO_POWER_PIN = 12;
 
 void setup() {
   //pinMode(SERVO_1_PWM_PIN, OUTPUT);
@@ -23,34 +23,55 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Serial.println("Waiting 2s before powering servos");
-  delay(2000);
+  Serial.println("Waiting 5s before powering servos");
+  delay(5000);
   
-  Serial.println("Powering on servos, waiting 10s");
+  Serial.println("Powering on servos, waiting 5s");
   digitalWrite(SERVO_POWER_PIN, HIGH);
-  delay(10000);
+  delay(5000);
 
-  Serial.println("Rotating servos, waiting 1s between moves");
-  servo1.write(1);
-  servo2.write(1);
+  Serial.println("Rotating servo1");
+  rotateServoUp(servo1, 0, 179);
+  Serial.println("Servo1 rotation complete");
   delay(1000);
-  servo1.write(45);
-  servo2.write(45);
-  delay(1000);
-  servo1.write(90);
-  servo2.write(90);
-  delay(1000);
-  servo1.write(135);
-  servo2.write(135);
-  delay(1000);
-  servo1.write(178);
-  servo2.write(178);
+  rotateServoUp(servo2, 0, 179);
+  Serial.println("Servo2 rotation complete");
+  
+  delay(5000);
+  Serial.println("Rotating servos back");
 
-  Serial.println("Rotations complete, delaying 10s");
-  delay(10000);
+  Serial.println("Rotating servo1");
+  rotateServoDown(servo1, 179, 0);
+  Serial.println("Servo1 rotation complete");
+  delay(1000);
+  rotateServoDown(servo2, 179, 0);
+  Serial.println("Servo2 rotation complete");
+  delay(5000);
 
   Serial.println("Powering down servos");
   digitalWrite(SERVO_POWER_PIN, LOW);
-  delay(2000);
+  delay(5000);
   Serial.println("Starting over");
+}
+
+void rotateServoUp(Servo &theServo, int startAngle, int endAngle) {
+  // https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/arduino-code-for-sweep
+  startAngle = max(startAngle, 0);
+  endAngle = min(endAngle, 179);
+  for(int angle = startAngle; angle <= endAngle; angle++)  
+  {                                  
+    theServo.write(angle);               
+    delay(15);                   
+  }
+}
+
+void rotateServoDown(Servo &theServo, int startAngle, int endAngle) {
+  // https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/arduino-code-for-sweep
+  startAngle = min(startAngle, 179);
+  endAngle = max(endAngle, 0);
+  for(int angle = startAngle; angle >= endAngle; angle--)  
+  {                                  
+    theServo.write(angle);               
+    delay(15);                   
+  }
 }
