@@ -19,6 +19,8 @@ const int SERVO_2_DEPLOYED_ANGLE = 179;
 // LEDs are also connected to a MOSFET
 const int LEDS_POWER_AND_PWM_PIN = 6;
 
+// only alarm if the lights are still on
+const int PHOTO_SENSOR_PIN = A5;
 
 void setup() {
   servo1.attach(SERVO_1_PWM_PIN);
@@ -40,6 +42,20 @@ void loop() {
   Serial.println("Waiting 5s before alarming");
   delay(5000);
 
+  // move servos so LEDs are visible
+  deployEyes();
+
+  // Flash LEDs for a while
+  flashEyes();
+  
+  // move servos so it looks like a normal clock again
+  hideEyes();
+  
+  delay(5000);
+  Serial.println("Starting over");
+}
+
+void deployEyes() {
   // Move servos into position to expose the eyes  
   Serial.println("Powering on servos, waiting 5s");
   digitalWrite(SERVO_POWER_PIN, HIGH);
@@ -54,17 +70,11 @@ void loop() {
   delay(1000);
   
   // Shut down servos to save power
+  Serial.println("Shutting down servos");
   digitalWrite(SERVO_POWER_PIN, LOW);
-  delay(1000);
+}
 
-  // Flash LEDs for a while
-  Serial.println("Flashing LEDS");
-  flashLed(LEDS_POWER_AND_PWM_PIN, 20, 0.25);
-
-  Serial.println("Shutting down LEDS");
-  digitalWrite(LEDS_POWER_AND_PWM_PIN, LOW);
-
-  // Turn servos back on
+void hideEyes() {
   digitalWrite(SERVO_POWER_PIN, HIGH);
   delay(1000);
 
@@ -80,10 +90,12 @@ void loop() {
 
   Serial.println("Powering down servos");
   digitalWrite(SERVO_POWER_PIN, LOW);
-  delay(5000);
-  Serial.println("Starting over");
+  delay(1000);
+}
 
-
+void flashEyes() {
+  Serial.println("Flashing LEDS");
+  flashLed(LEDS_POWER_AND_PWM_PIN, 20, 0.25);
 }
 
 void flashLed(int ledPin, float secondsToBlink, float secondsPerBlink) {
@@ -94,6 +106,9 @@ void flashLed(int ledPin, float secondsToBlink, float secondsPerBlink) {
     digitalWrite(ledPin, LOW);
     delay(secondsPerBlink * 500);
   }
+  
+  Serial.println("Shutting down LEDS");
+  digitalWrite(LEDS_POWER_AND_PWM_PIN, LOW);
 }
 
 
