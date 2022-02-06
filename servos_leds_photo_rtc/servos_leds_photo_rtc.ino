@@ -21,6 +21,7 @@ const int LEDS_POWER_AND_PWM_PIN = 6;
 
 // only alarm if the lights are still on
 const int PHOTO_SENSOR_PIN = A5;
+const int DARKNESS_LEVEL = 250;
 
 void setup() {
   servo1.attach(SERVO_1_PWM_PIN);
@@ -38,28 +39,35 @@ void setup() {
 }
 
 void loop() {
-  // Boot up
-  Serial.println("Waiting 5s before alarming");
-  delay(5000);
-
-  // move servos so LEDs are visible
-  deployEyes();
-
-  // Flash LEDs for a while
-  flashEyes();
+  int brightness = analogRead(PHOTO_SENSOR_PIN);
+  bool pastBedtime = isItPastBedtime();
+  if (pastBedtime && brightness > DARKNESS_LEVEL) {
+    Serial.println("Go to sleep already!  Starting motivational sequence.");  
+    // move servos so LEDs are visible
+    deployEyes();
   
-  // move servos so it looks like a normal clock again
-  hideEyes();
-  
-  delay(5000);
+    // Flash LEDs until the photo sensor goes dark
+    flashEyesUntilDark();
+    
+    // move servos so it looks like a normal clock again
+    hideEyes();
+  }
+
+  delay(1000);
   Serial.println("Starting over");
+}
+
+bool isItPastBedtime() {
+  return true;
 }
 
 void deployEyes() {
   // Move servos into position to expose the eyes  
-  Serial.println("Powering on servos, waiting 5s");
+  Serial.println("Powering on servos, waiting 1s");
+  servo1.write(SERVO_1_RESTING_ANGLE);
+  servo2.write(SERVO_2_RESTING_ANGLE);
   digitalWrite(SERVO_POWER_PIN, HIGH);
-  delay(5000);
+  delay(1000);
 
   Serial.println("Rotating servo1");
   rotateServo(servo1, SERVO_1_RESTING_ANGLE, SERVO_1_DEPLOYED_ANGLE);
@@ -75,6 +83,8 @@ void deployEyes() {
 }
 
 void hideEyes() {
+  servo1.write(SERVO_1_DEPLOYED_ANGLE);
+  servo2.write(SERVO_2_DEPLOYED_ANGLE);
   digitalWrite(SERVO_POWER_PIN, HIGH);
   delay(1000);
 
@@ -96,6 +106,24 @@ void hideEyes() {
 void flashEyes() {
   Serial.println("Flashing LEDS");
   flashLed(LEDS_POWER_AND_PWM_PIN, 20, 0.25);
+}
+
+void flashEyesUntilDark() {
+  // blink LEDs until the photoresistor reads dark
+  int brightness = analogRead(PHOTO_SENSOR_PIN);
+  while (brightness > DARKNESS_LEVEL) {
+    Serial.print("Current photo reading ");
+    Serial.println(brightness);
+    singleLedFlash(LEDS_POWER_AND_PWM_PIN, 0.25);
+    brightness = analogRead(PHOTO_SENSOR_PIN);
+  }
+}
+
+void singleLedFlash(int ledPin, float secondsPerBlink) {
+    digitalWrite(ledPin, HIGH);
+    delay(secondsPerBlink * 500); // spend half the milliseconds on, and half off
+    digitalWrite(ledPin, LOW);
+    delay(secondsPerBlink * 500);
 }
 
 void flashLed(int ledPin, float secondsToBlink, float secondsPerBlink) {
