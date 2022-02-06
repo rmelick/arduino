@@ -12,6 +12,11 @@ const int SERVO_POWER_PIN = 12;
 
 const int LEDS_POWER_AND_PWM_PIN = 6;
 
+const int SERVO_1_RESTING_ANGLE = 0;
+const int SERVO_2_RESTING_ANGLE = 0;
+const int SERVO_1_DEPLOYED_ANGLE = 179;
+const int SERVO_2_DEPLOYED_ANGLE = 179;
+
 void setup() {
   servo1.attach(SERVO_1_PWM_PIN);
   servo2.attach(SERVO_2_PWM_PIN);
@@ -24,23 +29,57 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  Serial.println("Waiting 5s before powering LEDs");
+  // Boot up
+  Serial.println("Waiting 5s before alarming");
   delay(5000);
 
-  Serial.println("Powering LEDs");
-  digitalWrite(LEDS_POWER_AND_PWM_PIN, HIGH);
-  Serial.println("Waiting 5s before flashing LEDs");
+  // Move servos into position to expose the eyes  
+  Serial.println("Powering on servos, waiting 5s");
+  digitalWrite(SERVO_POWER_PIN, HIGH);
   delay(5000);
 
+  Serial.println("Rotating servo1");
+  rotateServo(servo1, SERVO_1_RESTING_ANGLE, SERVO_1_DEPLOYED_ANGLE);
+  Serial.println("Servo1 rotation complete");
+  delay(1000);
+  rotateServo(servo2, SERVO_2_RESTING_ANGLE, SERVO_2_DEPLOYED_ANGLE);
+  Serial.println("Servo2 rotation complete");
+  delay(1000);
+  
+  // Shut down servos to save power
+  digitalWrite(SERVO_POWER_PIN, LOW);
+  delay(1000);
+
+  // Flash LEDs for a while
   Serial.println("Flashing LEDS");
-  flashLed(LEDS_POWER_AND_PWM_PIN, 30, 2);
+  flashLed(LEDS_POWER_AND_PWM_PIN, 20, 0.25);
 
   Serial.println("Shutting down LEDS");
   digitalWrite(LEDS_POWER_AND_PWM_PIN, LOW);
+
+  // Turn servos back on
+  digitalWrite(SERVO_POWER_PIN, HIGH);
+  delay(1000);
+
+  // Move servos back to hidden
+  Serial.println("Rotating servos back");
+  Serial.println("Rotating servo1");
+  rotateServo(servo1, SERVO_1_DEPLOYED_ANGLE, SERVO_1_RESTING_ANGLE);
+  Serial.println("Servo1 rotation complete");
+  delay(1000);
+  rotateServo(servo2, SERVO_1_DEPLOYED_ANGLE, SERVO_2_RESTING_ANGLE);
+  Serial.println("Servo2 rotation complete");
+  delay(1000);
+
+  Serial.println("Powering down servos");
+  digitalWrite(SERVO_POWER_PIN, LOW);
+  delay(5000);
+  Serial.println("Starting over");
+
+
 }
 
-void flashLed(int ledPin, int secondsToBlink, int secondsPerBlink) {
+void flashLed(int ledPin, float secondsToBlink, float secondsPerBlink) {
   int numberOfBlinks = secondsToBlink / secondsPerBlink;
   for (int blinkCount = 0; blinkCount < numberOfBlinks; blinkCount++) {
     digitalWrite(ledPin, HIGH);
@@ -50,6 +89,14 @@ void flashLed(int ledPin, int secondsToBlink, int secondsPerBlink) {
   }
 }
 
+
+void rotateServo(Servo &theServo, int startAngle, int endAngle) {
+  if (startAngle > endAngle) {
+    rotateServoDown(theServo, startAngle, endAngle);
+  } else {
+    rotateServoUp(theServo, startAngle, endAngle);
+  }
+}
 
 void rotateServoUp(Servo &theServo, int startAngle, int endAngle) {
   // https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/arduino-code-for-sweep
