@@ -1,10 +1,10 @@
 #include <Servo.h>
-
-Servo servo1;
-Servo servo2;
+#include "RTClib.h"
 
 // two servos powered by PWM
 // but also they don't get power until their MOSFET is activated
+Servo servo1;
+Servo servo2;
 
 const int SERVO_1_PWM_PIN = 9;
 const int SERVO_2_PWM_PIN = 10;
@@ -23,7 +23,15 @@ const int LEDS_POWER_AND_PWM_PIN = 6;
 const int PHOTO_SENSOR_PIN = A0;
 const int DARKNESS_LEVEL = 250;
 
+// Date and time functions using a DS1307 RTC connected via I2C and Wire lib
+RTC_DS1307 rtc;
+const char DAYS_OF_THE_WEEK[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
 void setup() {
+  Serial.begin(9600);
+  
+  ensureIntializedRTC();
+  
   servo1.attach(SERVO_1_PWM_PIN);
   servo2.attach(SERVO_2_PWM_PIN);
   pinMode(SERVO_POWER_PIN, OUTPUT);
@@ -33,9 +41,24 @@ void setup() {
   // get orange light on pin 13 to turn off
   // https://arduino.stackexchange.com/questions/3269/what-purpose-does-the-yellow-and-green-leds-have-on-the-arduino/3275#:~:text=The%20green%20LED%20is%20marked,just%20connected%20to%20pin%2013.&text=When%20the%20green%20LED%20stops,light%20the%20LED(s).
   pinMode(13, OUTPUT);
-
-  Serial.begin(9600);
+  
   Serial.println("Booting");
+}
+
+void ensureIntializedRTC() {
+  if (! rtc.begin()) {
+   Serial.println("Couldn't find RTC");
+   while (1);
+ }
+ 
+ if (! rtc.isrunning()) {
+   Serial.println("RTC is NOT running!");
+   // following line sets the RTC to the date & time this sketch was compiled
+   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+   // This line sets the RTC with an explicit date & time, for example to set
+   // January 21, 2014 at 3am you would call:
+   // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+ }
 }
 
 void loop() {
@@ -58,7 +81,31 @@ void loop() {
 }
 
 bool isItPastBedtime() {
+  printCurrentTime();
   return true;
+}
+
+void printCurrentTime() {
+  DateTime now = rtc.now();
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(" (");
+  Serial.print(DAYS_OF_THE_WEEK[now.dayOfTheWeek()]);
+  Serial.print(") ");
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+  Serial.print(" since midnight 1/1/1970 = ");
+  Serial.print(now.unixtime());
+  Serial.print("s = ");
+  Serial.print(now.unixtime() / 86400L);
+  Serial.println("d");
 }
 
 void deployEyes() {
