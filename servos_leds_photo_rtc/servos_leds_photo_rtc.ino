@@ -20,7 +20,7 @@ const int SERVO_2_DEPLOYED_ANGLE = 179;
 const int LEDS_POWER_AND_PWM_PIN = 6;
 
 // only alarm if the lights are still on
-const int PHOTO_SENSOR_PIN = A5;
+const int PHOTO_SENSOR_PIN = A0;
 const int DARKNESS_LEVEL = 250;
 
 void setup() {
