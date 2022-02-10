@@ -10,10 +10,10 @@ const int SERVO_1_PWM_PIN = 9;
 const int SERVO_2_PWM_PIN = 10;
 const int SERVO_POWER_PIN = 12;
 
-const int SERVO_1_RESTING_ANGLE = 0;
-const int SERVO_2_RESTING_ANGLE = 0;
-const int SERVO_1_DEPLOYED_ANGLE = 179;
-const int SERVO_2_DEPLOYED_ANGLE = 179;
+const int SERVO_1_RESTING_ANGLE = 45; // 0
+const int SERVO_2_RESTING_ANGLE = 15; // 0
+const int SERVO_1_DEPLOYED_ANGLE = 135; // 179
+const int SERVO_2_DEPLOYED_ANGLE = 135; // 179
 
 
 // LEDs are also connected to a MOSFET
@@ -137,13 +137,13 @@ void hideEyes() {
 
   // Move servos back to hidden
   Serial.println("Rotating servos back");
-  Serial.println("Rotating servo1");
-  rotateServo(servo1, SERVO_1_DEPLOYED_ANGLE, SERVO_1_RESTING_ANGLE);
-  Serial.println("Servo1 rotation complete");
   delay(1000);
   rotateServo(servo2, SERVO_1_DEPLOYED_ANGLE, SERVO_2_RESTING_ANGLE);
   Serial.println("Servo2 rotation complete");
   delay(1000);
+  Serial.println("Rotating servo1");
+  rotateServo(servo1, SERVO_1_DEPLOYED_ANGLE, SERVO_1_RESTING_ANGLE);
+  Serial.println("Servo1 rotation complete");
 
   Serial.println("Powering down servos");
   digitalWrite(SERVO_POWER_PIN, LOW);
@@ -199,10 +199,10 @@ void rotateServoUp(Servo &theServo, int startAngle, int endAngle) {
   // https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/arduino-code-for-sweep
   startAngle = max(startAngle, 0);
   endAngle = min(endAngle, 179);
-  for(int angle = startAngle; angle <= endAngle; angle++)  
+  for(int angle = startAngle; angle <= endAngle; angle = angle+2)  
   {                                  
     theServo.write(angle);               
-    delay(15);                   
+    delay(8);                   
   }
 }
 
@@ -210,9 +210,9 @@ void rotateServoDown(Servo &theServo, int startAngle, int endAngle) {
   // https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/arduino-code-for-sweep
   startAngle = min(startAngle, 179);
   endAngle = max(endAngle, 0);
-  for(int angle = startAngle; angle >= endAngle; angle--)  
+  for(int angle = startAngle; angle >= endAngle; angle = angle-2)  
   {                                  
     theServo.write(angle);               
-    delay(15);                   
+    delay(8);                   
   }
 }
